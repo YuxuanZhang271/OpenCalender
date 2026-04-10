@@ -12,8 +12,8 @@ window.OPEN_CALENDAR_CONFIG = {
     reminders: "../database/reminders.csv",
   },
   github: {
-    owner: "",
-    repo: "",
+    owner: "YuxuanZhang271",
+    repo: "OpenCalender",
     branch: "main",
     dataPath: "database/calendar-data.json",
     commitMode: "actions",
