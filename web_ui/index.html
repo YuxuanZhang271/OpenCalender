@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpenCalendar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="hero">
+        <div class="hero__title-group">
+          <h1 id="app-title">OpenCalendar</h1>
+        </div>
+
+        <div class="hero__side">
+          <div class="hero__meta-copy">
+            <p class="eyebrow hero__eyebrow">GitHub Pages Calendar</p>
+            <p id="app-subtitle" class="hero__subtitle">
+              A desktop-ready planner for the next six months.
+            </p>
+          </div>
+          <button
+            type="button"
+            class="theme-toggle"
+            id="theme-toggle"
+            aria-pressed="false"
+            aria-label="Toggle dark mode"
+          >
+            Dark mode
+          </button>
+        </div>
+      </header>
+
+      <main class="dashboard">
+        <aside class="panel panel--summary">
+          <section class="panel-section">
+            <div class="panel-section__heading">
+              <p class="panel-kicker">At a glance</p>
+              <h2>Overview</h2>
+            </div>
+            <div class="stats-grid" id="stats-grid">
+              <article class="stat">
+                <span class="stat__label">Events</span>
+                <strong class="stat__value" id="event-count">0</strong>
+              </article>
+              <article class="stat">
+                <span class="stat__label">Reminders</span>
+                <strong class="stat__value" id="reminder-count">0</strong>
+              </article>
+              <article class="stat">
+                <span class="stat__label">Due this week</span>
+                <strong class="stat__value" id="week-count">0</strong>
+              </article>
+              <article class="stat">
+                <span class="stat__label">Active spans</span>
+                <strong class="stat__value" id="active-count">0</strong>
+              </article>
+            </div>
+          </section>
+
+          <section class="panel-section">
+            <div class="panel-section__heading">
+              <p class="panel-kicker">Next up</p>
+              <h2>Upcoming items</h2>
+            </div>
+            <div id="upcoming-list" class="upcoming-list"></div>
+          </section>
+
+          <section class="panel-section">
+            <div class="panel-section__heading">
+              <p class="panel-kicker">Sync</p>
+              <h2>Repository flow</h2>
+            </div>
+            <article class="sync-card">
+              <p class="sync-card__headline" id="sync-headline">Read-only mode</p>
+              <p class="sync-card__body" id="sync-body">
+                Configure GitHub to publish JSON updates from the browser.
+              </p>
+              <div class="sync-card__meta">
+                <span id="data-source-label">Source: JSON</span>
+                <span id="pending-count">Working tree clean</span>
+              </div>
+              <div class="toolbar-actions">
+                <button type="button" class="ghost-button" id="configure-github">GitHub settings</button>
+                <button type="button" class="theme-toggle" id="publish-changes">Publish changes</button>
+              </div>
+            </article>
+          </section>
+        </aside>
+
+        <section class="panel panel--calendar">
+          <div class="calendar-toolbar">
+            <div>
+              <p class="panel-kicker">Calendar</p>
+              <h2>Scrollable month view</h2>
+            </div>
+            <div class="toolbar-actions">
+              <button type="button" class="ghost-button" id="add-event">Add event</button>
+              <button type="button" class="ghost-button" id="add-reminder">Add reminder</button>
+              <button type="button" class="ghost-button" id="jump-today">Jump to today</button>
+              <button type="button" class="ghost-button" id="refresh-data">Refresh data</button>
+            </div>
+          </div>
+
+          <div class="legend" aria-label="Calendar legend">
+            <span><i class="legend__swatch legend__swatch--event"></i> Event progress</span>
+            <span><i class="legend__swatch legend__swatch--deadline"></i> Deadline day</span>
+            <span><i class="legend__swatch legend__swatch--reminder"></i> Reminder</span>
+          </div>
+
+          <div id="status-banner" class="status-banner">Loading calendar data...</div>
+          <div id="calendar-container" class="calendar-container"></div>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="editor-modal" class="detail-modal">
+      <form id="editor-form" class="detail-modal__surface">
+        <div class="detail-modal__header">
+          <div>
+            <p class="panel-kicker" id="editor-kind">Item</p>
+            <h2 id="editor-title">Details</h2>
+          </div>
+          <button class="icon-button" type="button" id="cancel-editor" aria-label="Close editor">
+            ×
+          </button>
+        </div>
+
+        <div class="detail-grid" id="editor-fields"></div>
+
+        <div class="detail-note" id="editor-note">
+          Saving here updates the local draft first. Publish when you want to commit the JSON file.
+        </div>
+
+        <div class="modal-actions">
+          <button class="ghost-button" type="button" id="delete-item">Delete</button>
+          <button class="ghost-button" type="button" id="cancel-editor-secondary">Cancel</button>
+          <button class="theme-toggle" type="submit">Save item</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="settings-modal" class="detail-modal">
+      <form id="settings-form" class="detail-modal__surface">
+        <div class="detail-modal__header">
+          <div>
+            <p class="panel-kicker">GitHub</p>
+            <h2>Repository settings</h2>
+          </div>
+          <button class="icon-button" type="button" id="close-settings" aria-label="Close settings">
+            ×
+          </button>
+        </div>
+
+        <div class="detail-grid">
+          <label class="form-field">
+            <span class="form-field__label">Owner</span>
+            <input type="text" name="owner" placeholder="your-github-user" />
+          </label>
+          <label class="form-field">
+            <span class="form-field__label">Repository</span>
+            <input type="text" name="repo" placeholder="OpenCalender" />
+          </label>
+          <label class="form-field">
+            <span class="form-field__label">Branch</span>
+            <input type="text" name="branch" placeholder="main" />
+          </label>
+          <label class="form-field">
+            <span class="form-field__label">Commit mode</span>
+            <select name="commitMode">
+              <option value="actions">GitHub Actions</option>
+              <option value="contents">Contents API</option>
+            </select>
+          </label>
+          <label class="form-field form-field--full">
+            <span class="form-field__label">Data path</span>
+            <input type="text" name="dataPath" placeholder="database/calendar-data.json" />
+          </label>
+          <label class="form-field form-field--full">
+            <span class="form-field__label">Dispatch event type</span>
+            <input type="text" name="dispatchEventType" placeholder="calendar_data_sync" />
+          </label>
+          <label class="form-field form-field--full">
+            <span class="form-field__label">Personal access token</span>
+            <input type="password" name="token" placeholder="github_pat_..." />
+          </label>
+        </div>
+
+        <div class="detail-note">
+          The token is stored only in this browser via localStorage. `GitHub Actions` mode is the safer default because the browser triggers a workflow and the workflow does the commit.
+        </div>
+
+        <div class="modal-actions">
+          <button class="ghost-button" type="button" id="close-settings-secondary">Cancel</button>
+          <button class="theme-toggle" type="submit">Save settings</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="./config.js"></script>
+    <script src="./script.js"></script>
+  </body>
+</html>

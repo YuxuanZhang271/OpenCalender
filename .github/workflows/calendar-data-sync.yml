@@ -1,0 +1,63 @@
+name: Calendar Data Sync
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      data:
+        description: Base64 encoded calendar-data.json payload
+        required: true
+        type: string
+      path:
+        description: Repository path to update
+        required: true
+        default: database/calendar-data.json
+        type: string
+      branch:
+        description: Branch to update
+        required: true
+        default: main
+        type: string
+      commit_message:
+        description: Commit message
+        required: true
+        default: "chore: sync calendar data"
+        type: string
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      CALENDAR_PAYLOAD: ${{ github.event.client_payload.data || github.event.inputs.data }}
+      CALENDAR_PATH: ${{ github.event.client_payload.path || github.event.inputs.path || 'database/calendar-data.json' }}
+      CALENDAR_BRANCH: ${{ github.event.client_payload.branch || github.event.inputs.branch || github.event.repository.default_branch }}
+      COMMIT_MESSAGE: ${{ github.event.client_payload.commit_message || github.event.inputs.commit_message || 'chore: sync calendar data' }}
+    steps:
+      - name: Checkout target branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.CALENDAR_BRANCH }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate and write calendar data
+        run: node ./scripts/sync-calendar-data.mjs
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet -- "${CALENDAR_PATH}"; then
+            echo "No calendar data changes to commit."
+            exit 0
+          fi
+
+          git add "${CALENDAR_PATH}"
+          git commit -m "${COMMIT_MESSAGE}"
+          git push origin "HEAD:${CALENDAR_BRANCH}"
