@@ -187,16 +187,16 @@ function bindEvents() {
   });
 
   elements.deleteItem.addEventListener("click", () => deleteEditorItem());
-  elements.cancelEditor.addEventListener("click", () => elements.editorModal.close());
-  elements.cancelEditorSecondary.addEventListener("click", () => elements.editorModal.close());
+  elements.cancelEditor.addEventListener("click", () => closeModal(elements.editorModal));
+  elements.cancelEditorSecondary.addEventListener("click", () => closeModal(elements.editorModal));
 
   elements.settingsForm.addEventListener("submit", (event) => {
     event.preventDefault();
     saveGithubSettings();
   });
 
-  elements.closeSettings.addEventListener("click", () => elements.settingsModal.close());
-  elements.closeSettingsSecondary.addEventListener("click", () => elements.settingsModal.close());
+  elements.closeSettings.addEventListener("click", () => closeModal(elements.settingsModal));
+  elements.closeSettingsSecondary.addEventListener("click", () => closeModal(elements.settingsModal));
 }
 
 async function loadAndRender(options = {}) {
@@ -826,10 +826,7 @@ function openEditor(kind, itemId = null) {
     : "Saving here updates the local draft first. Publish when you want to commit the JSON file.";
   elements.deleteItem.hidden = !item;
 
-  if (elements.editorModal.open) {
-    elements.editorModal.close();
-  }
-  elements.editorModal.showModal();
+  openModal(elements.editorModal);
 }
 
 function buildEditorFields(kind, item) {
@@ -932,7 +929,7 @@ function saveEditorItem() {
 
   persistDraft();
   renderAll();
-  elements.editorModal.close();
+  closeModal(elements.editorModal);
   setStatus("Saved to local draft. Publish to push the JSON update to GitHub.");
 }
 
@@ -950,7 +947,7 @@ function deleteEditorItem() {
   state.data[collectionKey] = state.data[collectionKey].filter((item) => item.id !== state.editorContext.itemId);
   persistDraft();
   renderAll();
-  elements.editorModal.close();
+  closeModal(elements.editorModal);
   setStatus("Removed from the local draft. Publish to sync the deletion to GitHub.");
 }
 
@@ -974,10 +971,7 @@ function findItem(kind, itemId) {
 
 function openSettingsModal() {
   populateSettingsForm();
-  if (elements.settingsModal.open) {
-    elements.settingsModal.close();
-  }
-  elements.settingsModal.showModal();
+  openModal(elements.settingsModal);
 }
 
 function populateSettingsForm() {
@@ -1005,7 +999,7 @@ function saveGithubSettings() {
 
   window.localStorage.setItem(GITHUB_SETTINGS_STORAGE_KEY, JSON.stringify(state.githubSettings));
   renderSyncCard();
-  elements.settingsModal.close();
+  closeModal(elements.settingsModal);
   setStatus("GitHub settings saved in this browser.");
 }
 
@@ -1244,6 +1238,41 @@ function buildCommitMessage() {
 
 function safeReadJson(response) {
   return response.json().catch(() => null);
+}
+
+function openModal(modal) {
+  if (!modal) {
+    return;
+  }
+
+  if (typeof modal.showModal === "function") {
+    if (modal.open) {
+      modal.close();
+    }
+    modal.showModal();
+    return;
+  }
+
+  modal.setAttribute("open", "true");
+  document.body.classList.add("has-fallback-modal");
+}
+
+function closeModal(modal) {
+  if (!modal) {
+    return;
+  }
+
+  if (typeof modal.close === "function") {
+    if (modal.open) {
+      modal.close();
+    }
+  } else {
+    modal.removeAttribute("open");
+  }
+
+  if (!document.querySelector("dialog[open]")) {
+    document.body.classList.remove("has-fallback-modal");
+  }
 }
 
 function normalizeHeader(header) {

@@ -178,7 +178,7 @@ h2 {
   display: grid;
   grid-template-columns: minmax(248px, 280px) minmax(0, 1fr);
   gap: 18px;
-  align-items: start;
+  align-items: stretch;
   height: 100%;
   min-height: 0;
 }
@@ -674,6 +674,10 @@ h2 {
   border: none;
   border-radius: 26px;
   background: transparent;
+}
+
+.detail-modal:not([open]) {
+  display: none;
 }
 
 .detail-modal::backdrop {
