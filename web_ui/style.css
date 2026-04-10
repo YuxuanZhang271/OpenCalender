@@ -199,7 +199,9 @@ h2 {
 .panel--summary {
   padding: 18px;
   height: 100%;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
 }
 
 .panel--calendar {
@@ -212,6 +214,22 @@ h2 {
 
 .panel-section + .panel-section {
   margin-top: 22px;
+}
+
+.panel--summary::-webkit-scrollbar,
+.calendar-container::-webkit-scrollbar {
+  width: 10px;
+}
+
+.panel--summary::-webkit-scrollbar-thumb,
+.calendar-container::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(95, 109, 99, 0.28);
+}
+
+.panel--summary::-webkit-scrollbar-track,
+.calendar-container::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .panel-section__heading {

@@ -107,6 +107,7 @@ const elements = {
   addReminder: document.getElementById("add-reminder"),
   publishChanges: document.getElementById("publish-changes"),
   configureGithub: document.getElementById("configure-github"),
+  configureGithubToolbar: document.getElementById("configure-github-toolbar"),
   syncHeadline: document.getElementById("sync-headline"),
   syncBody: document.getElementById("sync-body"),
   dataSourceLabel: document.getElementById("data-source-label"),
@@ -178,6 +179,7 @@ function bindEvents() {
   elements.addReminder.addEventListener("click", () => openEditor("reminder"));
   elements.publishChanges.addEventListener("click", () => publishChanges());
   elements.configureGithub.addEventListener("click", () => openSettingsModal());
+  elements.configureGithubToolbar.addEventListener("click", () => openSettingsModal());
 
   elements.editorForm.addEventListener("submit", (event) => {
     event.preventDefault();
