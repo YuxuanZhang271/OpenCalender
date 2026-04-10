@@ -30,10 +30,10 @@ jobs:
     permissions:
       contents: write
     env:
-      CALENDAR_PAYLOAD: ${{ github.event.client_payload.data || github.event.inputs.data }}
-      CALENDAR_PATH: ${{ github.event.client_payload.path || github.event.inputs.path || 'database/calendar-data.json' }}
-      CALENDAR_BRANCH: ${{ github.event.client_payload.branch || github.event.inputs.branch || github.event.repository.default_branch }}
-      COMMIT_MESSAGE: ${{ github.event.client_payload.commit_message || github.event.inputs.commit_message || 'chore: sync calendar data' }}
+      CALENDAR_PAYLOAD: "${{ github.event.client_payload.data || github.event.inputs.data }}"
+      CALENDAR_PATH: "${{ github.event.client_payload.path || github.event.inputs.path || 'database/calendar-data.json' }}"
+      CALENDAR_BRANCH: "${{ github.event.client_payload.branch || github.event.inputs.branch || github.event.repository.default_branch }}"
+      COMMIT_MESSAGE: "${{ github.event.client_payload.commit_message || github.event.inputs.commit_message || 'chore: sync calendar data' }}"
     steps:
       - name: Checkout target branch
         uses: actions/checkout@v4
