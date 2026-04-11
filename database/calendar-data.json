@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-11T00:32:25.756Z",
+  "updatedAt": "2026-04-11T00:37:56.610Z",
   "events": [
     {
       "id": "event-202604120000-3-vla-profiler",
@@ -53,5 +53,18 @@
       "extra": {}
     }
   ],
-  "reminders": []
+  "reminders": [
+    {
+      "id": "reminder-202604250000-2-tatoo",
+      "message": "Tatoo",
+      "time": "2026-04-25T00:00",
+      "extra": {}
+    },
+    {
+      "id": "reminder-202604280000-1-rent",
+      "message": "Rent",
+      "time": "2026-04-28T00:00",
+      "extra": {}
+    }
+  ]
 }
