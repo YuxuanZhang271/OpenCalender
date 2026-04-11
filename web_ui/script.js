@@ -449,11 +449,26 @@ function normalizeReminder(row, index = 0) {
     return null;
   }
 
+  const recurring = getBooleanValue(row, ["recurring", "repeat", "isRecurring"]);
+  const recurrenceInterval = normalizePositiveInteger(
+    getValue(row, ["recurrenceInterval", "repeatInterval", "interval"]),
+    1,
+  );
+  const recurrenceUnit = normalizeRecurrenceUnit(
+    getValue(row, ["recurrenceUnit", "repeatUnit", "intervalUnit"]) || "day",
+  );
+
   return {
     id: getValue(row, ["id"]) || createItemId("reminder", message, time, index),
     kind: "reminder",
     message,
     time,
+    completed: getBooleanValue(row, ["completed", "done", "isDone"]),
+    completedAt: parseDateValue(getValue(row, ["completedAt", "doneAt"])),
+    recurring,
+    recurrenceInterval: recurring ? recurrenceInterval : 1,
+    recurrenceUnit,
+    lastCompletedAt: parseDateValue(getValue(row, ["lastCompletedAt"])),
     extra: normalizeExtraField(row?.extra) || collectExtra(row, [
       "id",
       "message",
@@ -463,6 +478,21 @@ function normalizeReminder(row, index = 0) {
       "time",
       "datetime",
       "date",
+      "completed",
+      "done",
+      "isDone",
+      "completedAt",
+      "doneAt",
+      "recurring",
+      "repeat",
+      "isRecurring",
+      "recurrenceInterval",
+      "repeatInterval",
+      "interval",
+      "recurrenceUnit",
+      "repeatUnit",
+      "intervalUnit",
+      "lastCompletedAt",
       "extra",
     ]),
   };
@@ -483,6 +513,49 @@ function getValue(row, keys) {
     }
   }
   return "";
+}
+
+function getBooleanValue(row, keys) {
+  if (!row || typeof row !== "object") {
+    return false;
+  }
+
+  for (const key of keys) {
+    const value = row[key];
+    if (typeof value === "boolean") {
+      return value;
+    }
+    if (typeof value === "number") {
+      return value !== 0;
+    }
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase();
+      if (["true", "1", "yes", "y", "done", "completed"].includes(normalized)) {
+        return true;
+      }
+      if (["false", "0", "no", "n", ""].includes(normalized)) {
+        return false;
+      }
+    }
+  }
+
+  return false;
+}
+
+function normalizePositiveInteger(value, fallback) {
+  const parsed = Number.parseInt(String(value || ""), 10);
+  if (Number.isNaN(parsed) || parsed <= 0) {
+    return fallback;
+  }
+  return parsed;
+}
+
+function normalizeRecurrenceUnit(value) {
+  const normalized = String(value || "day").trim().toLowerCase();
+  if (["hour", "day", "week", "month"].includes(normalized)) {
+    return normalized;
+  }
+  return "day";
 }
 
 function normalizeExtraField(extra) {
@@ -546,21 +619,35 @@ function renderAll() {
 function renderStats() {
   const now = startOfDay(new Date());
   const weekFromNow = addDays(now, 7);
+  const visibleReminders = getVisibleReminders();
   const activeEvents = state.data.events.filter((event) => startOfDay(event.deadline) >= now);
   const thisWeek = [
     ...state.data.events.filter((event) => startOfDay(event.deadline) >= now && startOfDay(event.deadline) < weekFromNow),
-    ...state.data.reminders.filter((reminder) => startOfDay(reminder.time) >= now && startOfDay(reminder.time) < weekFromNow),
+    ...visibleReminders.filter((reminder) => startOfDay(reminder.time) >= now && startOfDay(reminder.time) < weekFromNow),
   ];
 
   elements.eventCount.textContent = String(state.data.events.length);
-  elements.reminderCount.textContent = String(state.data.reminders.length);
+  elements.reminderCount.textContent = String(visibleReminders.length);
   elements.weekCount.textContent = String(thisWeek.length);
   elements.activeCount.textContent = String(activeEvents.length);
+}
+
+function getVisibleReminders() {
+  return state.data.reminders.filter((reminder) => !reminder.completed);
+}
+
+function buildReminderMeta(reminder) {
+  if (reminder.recurring) {
+    return `Reminder · repeats every ${reminder.recurrenceInterval} ${pluralizeUnit(reminder.recurrenceUnit, reminder.recurrenceInterval)}`;
+  }
+
+  return "Reminder";
 }
 
 function renderUpcoming() {
   const now = startOfDay(new Date());
   const end = addDays(now, APP_CONFIG.upcomingDays);
+  const visibleReminders = getVisibleReminders();
   const upcoming = [
     ...state.data.events
       .filter((event) => startOfDay(event.deadline) >= now && startOfDay(event.deadline) < end)
@@ -571,14 +658,14 @@ function renderUpcoming() {
         item: event,
         meta: `${event.eventType} · ${event.address}`,
       })),
-    ...state.data.reminders
+    ...visibleReminders
       .filter((reminder) => startOfDay(reminder.time) >= now && startOfDay(reminder.time) < end)
       .map((reminder) => ({
         kind: "reminder",
         title: reminder.message,
         when: reminder.time,
         item: reminder,
-        meta: "Reminder",
+        meta: buildReminderMeta(reminder),
       })),
   ].sort((left, right) => left.when - right.when);
 
@@ -818,13 +905,13 @@ function renderDayCard(date, monthStart, visibleEventCount, dayIndex) {
 }
 
 function getRemindersForDate(date) {
-  return state.data.reminders.filter((reminder) => compareDays(startOfDay(reminder.time), date));
+  return getVisibleReminders().filter((reminder) => compareDays(startOfDay(reminder.time), date));
 }
 
 function countItemsInMonth(monthStart) {
   const monthEnd = endOfMonth(monthStart);
   const eventCount = state.data.events.filter((event) => startOfDay(event.startDate) <= monthEnd && startOfDay(event.deadline) >= monthStart).length;
-  const reminderCount = state.data.reminders.filter((reminder) => reminder.time >= monthStart && reminder.time <= monthEnd).length;
+  const reminderCount = getVisibleReminders().filter((reminder) => reminder.time >= monthStart && reminder.time <= monthEnd).length;
   return eventCount + reminderCount;
 }
 
@@ -896,10 +983,38 @@ function buildEditorFields(kind, item, defaults = {}) {
   return `
     ${buildField("Message", "message", "text", item?.message || "", { required: true, full: true })}
     ${buildField("Time", "time", "datetime-local", toDateTimeLocalValue(item?.time || defaults.defaultReminderTime || getDefaultReminderTime()), { required: true })}
+    ${buildCheckboxField("Completed", "completed", Boolean(item?.completed))}
+    ${buildCheckboxField("Repeat after completion", "recurring", Boolean(item?.recurring))}
+    ${buildField("Repeat every", "recurrenceInterval", "number", String(item?.recurrenceInterval || 1), { min: 1 })}
+    ${buildSelectField("Unit", "recurrenceUnit", [
+      ["hour", "Hour"],
+      ["day", "Day"],
+      ["week", "Week"],
+      ["month", "Month"],
+    ], item?.recurrenceUnit || "day")}
   `;
 }
 
 function initializeEditorDefaults(kind, item) {
+  if (kind === "reminder") {
+    const recurringInput = elements.editorForm.querySelector('input[name="recurring"]');
+    const intervalInput = elements.editorForm.querySelector('input[name="recurrenceInterval"]');
+    const unitInput = elements.editorForm.querySelector('select[name="recurrenceUnit"]');
+
+    if (recurringInput && intervalInput && unitInput) {
+      const syncRecurringFields = () => {
+        const enabled = recurringInput.checked;
+        intervalInput.disabled = !enabled;
+        unitInput.disabled = !enabled;
+      };
+
+      recurringInput.addEventListener("change", syncRecurringFields);
+      syncRecurringFields();
+    }
+
+    return;
+  }
+
   if (kind !== "event" || item) {
     return;
   }
@@ -933,10 +1048,35 @@ function initializeEditorDefaults(kind, item) {
 function buildField(label, name, type, value, options = {}) {
   const required = options.required ? "required" : "";
   const full = options.full ? " form-field--full" : "";
+  const min = options.min !== undefined ? `min="${escapeHtml(String(options.min))}"` : "";
   return `
     <label class="form-field${full}">
       <span class="form-field__label">${escapeHtml(label)}</span>
-      <input type="${type}" name="${name}" value="${escapeHtml(String(value || ""))}" ${required} />
+      <input type="${type}" name="${name}" value="${escapeHtml(String(value || ""))}" ${required} ${min} />
+    </label>
+  `;
+}
+
+function buildCheckboxField(label, name, checked) {
+  return `
+    <label class="form-field form-field--checkbox">
+      <input type="checkbox" name="${name}" ${checked ? "checked" : ""} />
+      <span class="form-field__label form-field__label--checkbox">${escapeHtml(label)}</span>
+    </label>
+  `;
+}
+
+function buildSelectField(label, name, options, selectedValue) {
+  const renderedOptions = options
+    .map(([value, text]) => `<option value="${escapeHtml(value)}"${value === selectedValue ? " selected" : ""}>${escapeHtml(text)}</option>`)
+    .join("");
+
+  return `
+    <label class="form-field">
+      <span class="form-field__label">${escapeHtml(label)}</span>
+      <select name="${name}">
+        ${renderedOptions}
+      </select>
     </label>
   `;
 }
@@ -994,11 +1134,27 @@ function saveEditorItem() {
       return;
     }
 
+    const recurring = formData.get("recurring") === "on";
+    const completed = formData.get("completed") === "on";
+    const recurrenceInterval = normalizePositiveInteger(formData.get("recurrenceInterval"), 1);
+    const recurrenceUnit = normalizeRecurrenceUnit(String(formData.get("recurrenceUnit") || "day"));
+    const completionTimestamp = new Date();
+    const shouldAdvanceRecurring = recurring && completed;
+    const nextTime = shouldAdvanceRecurring
+      ? addInterval(completionTimestamp, recurrenceInterval, recurrenceUnit)
+      : time;
+
     const reminder = {
       id: existing?.id || createItemId("reminder", formData.get("message"), time, state.data.reminders.length),
       kind: "reminder",
       message: String(formData.get("message") || "").trim(),
-      time,
+      time: nextTime,
+      completed: shouldAdvanceRecurring ? false : completed,
+      completedAt: !recurring && completed ? completionTimestamp : null,
+      recurring,
+      recurrenceInterval: recurring ? recurrenceInterval : 1,
+      recurrenceUnit,
+      lastCompletedAt: shouldAdvanceRecurring ? completionTimestamp : existing?.lastCompletedAt || null,
       extra: existing?.extra || {},
     };
 
@@ -1013,6 +1169,11 @@ function saveEditorItem() {
   persistDraft();
   renderAll();
   closeModal(elements.editorModal);
+  if (kind === "reminder" && formData.get("recurring") === "on" && formData.get("completed") === "on") {
+    setStatus("Recurring reminder completed and advanced to the next scheduled time in your local draft.");
+    return;
+  }
+
   setStatus("Saved to local draft. Publish to push the JSON update to GitHub.");
 }
 
@@ -1289,6 +1450,12 @@ function toPlainCalendarData(data) {
       id: reminder.id,
       message: reminder.message,
       time: toIsoMinuteString(reminder.time),
+      completed: Boolean(reminder.completed),
+      completedAt: reminder.completedAt ? toIsoMinuteString(reminder.completedAt) : "",
+      recurring: Boolean(reminder.recurring),
+      recurrenceInterval: reminder.recurrenceInterval || 1,
+      recurrenceUnit: reminder.recurrenceUnit || "day",
+      lastCompletedAt: reminder.lastCompletedAt ? toIsoMinuteString(reminder.lastCompletedAt) : "",
       extra: reminder.extra || {},
     })),
   };
@@ -1423,6 +1590,32 @@ function getDefaultEventDeadline(startDate) {
 
 function getDefaultReminderTime() {
   return addDays(new Date(), 1);
+}
+
+function addInterval(date, amount, unit) {
+  const next = new Date(date);
+
+  if (unit === "hour") {
+    next.setHours(next.getHours() + amount);
+    return next;
+  }
+
+  if (unit === "week") {
+    next.setDate(next.getDate() + amount * 7);
+    return next;
+  }
+
+  if (unit === "month") {
+    next.setMonth(next.getMonth() + amount);
+    return next;
+  }
+
+  next.setDate(next.getDate() + amount);
+  return next;
+}
+
+function pluralizeUnit(unit, amount) {
+  return amount === 1 ? unit : `${unit}s`;
 }
 
 function addMonths(date, months) {
