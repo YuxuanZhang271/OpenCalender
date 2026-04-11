@@ -6,6 +6,7 @@ const knownEventTypes = [
   "title",
   "startDate",
   "deadline",
+  "completed",
   "eventType",
   "address",
   "details",
@@ -16,6 +17,12 @@ const knownReminderTypes = [
   "id",
   "message",
   "time",
+  "completed",
+  "completedAt",
+  "recurring",
+  "recurrenceInterval",
+  "recurrenceUnit",
+  "lastCompletedAt",
   "extra",
 ];
 
@@ -86,6 +93,7 @@ function normalizeEvent(event, index) {
     title,
     startDate,
     deadline,
+    completed: normalizeBoolean(event.completed),
     eventType: requireString(event.eventType || "General", `events[${index}].eventType`),
     address: String(event.address || "Not set").trim() || "Not set",
     details: String(event.details || "").trim(),
@@ -98,10 +106,18 @@ function normalizeReminder(reminder, index) {
     throw new Error(`Reminder at index ${index} must be an object.`);
   }
 
+  const recurring = normalizeBoolean(reminder.recurring);
+
   return {
     id: requireString(reminder.id, `reminders[${index}].id`),
     message: requireString(reminder.message, `reminders[${index}].message`),
     time: normalizeLocalDateTime(reminder.time, `reminders[${index}].time`),
+    completed: normalizeBoolean(reminder.completed),
+    completedAt: normalizeOptionalLocalDateTime(reminder.completedAt),
+    recurring,
+    recurrenceInterval: recurring ? normalizePositiveInteger(reminder.recurrenceInterval, 1) : 1,
+    recurrenceUnit: normalizeRecurrenceUnit(reminder.recurrenceUnit || "day"),
+    lastCompletedAt: normalizeOptionalLocalDateTime(reminder.lastCompletedAt),
     extra: normalizeExtra(reminder.extra, reminder, knownReminderTypes),
   };
 }
@@ -146,6 +162,45 @@ function normalizeTimestamp(value) {
     return new Date().toISOString();
   }
   return date.toISOString();
+}
+
+function normalizeBoolean(value) {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value === "number") {
+    return value !== 0;
+  }
+
+  const normalized = String(value || "").trim().toLowerCase();
+  return ["true", "1", "yes", "y", "done", "completed"].includes(normalized);
+}
+
+function normalizeOptionalLocalDateTime(value) {
+  if (value === undefined || value === null || String(value).trim() === "") {
+    return "";
+  }
+
+  return normalizeLocalDateTime(value, "optional datetime");
+}
+
+function normalizePositiveInteger(value, fallback) {
+  const parsed = Number.parseInt(String(value || ""), 10);
+  if (Number.isNaN(parsed) || parsed <= 0) {
+    return fallback;
+  }
+
+  return parsed;
+}
+
+function normalizeRecurrenceUnit(value) {
+  const normalized = String(value || "day").trim().toLowerCase();
+  if (["hour", "day", "week", "month"].includes(normalized)) {
+    return normalized;
+  }
+
+  return "day";
 }
 
 function compareByKey(key) {
