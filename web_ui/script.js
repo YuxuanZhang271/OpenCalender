@@ -854,6 +854,8 @@ function renderSyncCard() {
 
 function openEditor(kind, itemId = null) {
   const item = itemId ? findItem(kind, itemId) : null;
+  const defaultEventStart = !item && kind === "event" ? new Date() : null;
+  const defaultReminderTime = !item && kind === "reminder" ? getDefaultReminderTime() : null;
   state.editorContext = {
     kind,
     itemId,
@@ -864,21 +866,27 @@ function openEditor(kind, itemId = null) {
   elements.editorTitle.textContent = item
     ? kind === "event" ? item.title : item.message
     : kind === "event" ? "New event" : "New reminder";
-  elements.editorFields.innerHTML = buildEditorFields(kind, item);
+  elements.editorFields.innerHTML = buildEditorFields(kind, item, {
+    defaultEventStart,
+    defaultReminderTime,
+  });
   elements.editorNote.textContent = state.dirty
     ? "This item will stay in your local draft until you publish to GitHub."
     : "Saving here updates the local draft first. Publish when you want to commit the JSON file.";
   elements.deleteItem.hidden = !item;
 
+  initializeEditorDefaults(kind, item);
   openModal(elements.editorModal);
 }
 
-function buildEditorFields(kind, item) {
+function buildEditorFields(kind, item, defaults = {}) {
   if (kind === "event") {
+    const startDate = item?.startDate || defaults.defaultEventStart || new Date();
+    const deadline = item?.deadline || getDefaultEventDeadline(startDate);
     return `
       ${buildField("Title", "title", "text", item?.title || "", { required: true, full: true })}
-      ${buildField("Start", "startDate", "datetime-local", toDateTimeLocalValue(item?.startDate || new Date()), { required: true })}
-      ${buildField("Deadline", "deadline", "datetime-local", toDateTimeLocalValue(item?.deadline || addDays(new Date(), 1)), { required: true })}
+      ${buildField("Start", "startDate", "datetime-local", toDateTimeLocalValue(startDate), { required: true })}
+      ${buildField("Deadline", "deadline", "datetime-local", toDateTimeLocalValue(deadline), { required: true })}
       ${buildField("Event type", "eventType", "text", item?.eventType || "General", { required: true })}
       ${buildField("Address", "address", "text", item?.address === "Not set" ? "" : item?.address || "", {})}
       ${buildTextarea("Details", "details", item?.details || "", { full: true })}
@@ -887,8 +895,39 @@ function buildEditorFields(kind, item) {
 
   return `
     ${buildField("Message", "message", "text", item?.message || "", { required: true, full: true })}
-    ${buildField("Time", "time", "datetime-local", toDateTimeLocalValue(item?.time || new Date()), { required: true })}
+    ${buildField("Time", "time", "datetime-local", toDateTimeLocalValue(item?.time || defaults.defaultReminderTime || getDefaultReminderTime()), { required: true })}
   `;
+}
+
+function initializeEditorDefaults(kind, item) {
+  if (kind !== "event" || item) {
+    return;
+  }
+
+  const startInput = elements.editorForm.querySelector('input[name="startDate"]');
+  const deadlineInput = elements.editorForm.querySelector('input[name="deadline"]');
+  if (!startInput || !deadlineInput) {
+    return;
+  }
+
+  deadlineInput.dataset.autoDerived = "true";
+
+  startInput.addEventListener("input", () => {
+    if (deadlineInput.dataset.autoDerived !== "true") {
+      return;
+    }
+
+    const startDate = parseDateValue(startInput.value);
+    if (!startDate) {
+      return;
+    }
+
+    deadlineInput.value = toDateTimeLocalValue(getDefaultEventDeadline(startDate));
+  });
+
+  deadlineInput.addEventListener("input", () => {
+    deadlineInput.dataset.autoDerived = "false";
+  });
 }
 
 function buildField(label, name, type, value, options = {}) {
@@ -1374,6 +1413,16 @@ function addDays(date, days) {
   const result = new Date(date);
   result.setDate(result.getDate() + days);
   return startOfDay(result);
+}
+
+function getDefaultEventDeadline(startDate) {
+  const deadline = addDays(startDate, 1);
+  deadline.setHours(23, 59, 0, 0);
+  return deadline;
+}
+
+function getDefaultReminderTime() {
+  return addDays(new Date(), 1);
 }
 
 function addMonths(date, months) {
