@@ -409,6 +409,7 @@ function normalizeEvent(row, index = 0) {
     title,
     startDate,
     deadline,
+    completed: getBooleanValue(row, ["completed", "done", "isDone"]),
     eventType,
     eventTypeKey: normalizeTypeKey(eventType),
     address: getValue(row, ["address", "location", "place"]) || "Not set",
@@ -427,6 +428,9 @@ function normalizeEvent(row, index = 0) {
       "due",
       "date",
       "datetime",
+      "completed",
+      "done",
+      "isDone",
       "eventType",
       "event_type",
       "type",
@@ -633,15 +637,16 @@ function renderStats() {
 }
 
 function getVisibleReminders() {
-  return state.data.reminders.filter((reminder) => !reminder.completed);
+  return state.data.reminders;
 }
 
 function buildReminderMeta(reminder) {
+  const completedLabel = reminder.completed ? "Completed · " : "";
   if (reminder.recurring) {
-    return `Reminder · repeats every ${reminder.recurrenceInterval} ${pluralizeUnit(reminder.recurrenceUnit, reminder.recurrenceInterval)}`;
+    return `${completedLabel}Reminder · repeats every ${reminder.recurrenceInterval} ${pluralizeUnit(reminder.recurrenceUnit, reminder.recurrenceInterval)}`;
   }
 
-  return "Reminder";
+  return `${completedLabel}Reminder`;
 }
 
 function renderUpcoming() {
@@ -656,7 +661,7 @@ function renderUpcoming() {
         title: event.title,
         when: event.deadline,
         item: event,
-        meta: `${event.eventType} · ${event.address}`,
+        meta: `${event.completed ? "Completed · " : ""}${event.eventType} · ${event.address}`,
       })),
     ...visibleReminders
       .filter((reminder) => startOfDay(reminder.time) >= now && startOfDay(reminder.time) < end)
@@ -750,7 +755,7 @@ function renderWeekRow(weekDates, monthStart, eventLayout, weekIndex) {
   segments.forEach((segment) => {
     const button = document.createElement("button");
     button.type = "button";
-    button.className = `event-span event-span--rail${segment.showLabel ? "" : " is-quiet"}`;
+    button.className = `event-span event-span--rail${segment.event.completed ? " is-completed" : ""}${segment.showLabel ? "" : " is-quiet"}`;
     button.style.gridColumn = `${segment.startColumn} / ${segment.endColumn}`;
     button.style.gridRow = String(MAX_EVENT_LANES - segment.lane + 1);
     button.style.setProperty("--event-soft", segment.color.soft);
@@ -760,7 +765,7 @@ function renderWeekRow(weekDates, monthStart, eventLayout, weekIndex) {
       <span class="event-span__fill"></span>
       <span class="event-span__text">${escapeHtml(segment.label)}</span>
     `;
-    button.title = `${segment.event.title} · due ${formatDateTime(segment.event.deadline)}`;
+    button.title = `${segment.event.title} · due ${formatDateTime(segment.event.deadline)}${segment.event.completed ? " · completed" : ""}`;
     button.addEventListener("click", () => openEditor("event", segment.event.id));
     grid.appendChild(button);
   });
@@ -781,8 +786,6 @@ function buildEventLaneLayout(monthGrid) {
   const today = startOfDay(new Date());
   const visibleMonthStart = monthGrid[0];
   const visibleMonthEnd = monthGrid[monthGrid.length - 1];
-  const laneEndIndexes = [];
-
   const visibleEvents = state.data.events
     .map((event) => {
       const effectiveStart = maxDate(startOfDay(event.startDate || today), today);
@@ -809,16 +812,7 @@ function buildEventLaneLayout(monthGrid) {
     .filter(Boolean)
     .sort((left, right) => left.startIndex - right.startIndex || left.endIndex - right.endIndex);
 
-  visibleEvents.forEach((entry) => {
-    let lane = laneEndIndexes.findIndex((laneEnd) => laneEnd < entry.startIndex);
-    if (lane === -1) {
-      lane = laneEndIndexes.length;
-      laneEndIndexes.push(entry.endIndex);
-    } else {
-      laneEndIndexes[lane] = entry.endIndex;
-    }
-    entry.lane = lane;
-  });
+  assignEventLanesByNearestDeadline(visibleEvents);
 
   const segmentsByWeek = Array.from({ length: 6 }, () => []);
   const visibleCountByWeekDay = Array.from({ length: 6 }, () => Array(7).fill(0));
@@ -894,8 +888,8 @@ function renderDayCard(date, monthStart, visibleEventCount, dayIndex) {
   reminders.forEach((reminder) => {
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "reminder-dot";
-    button.title = `${reminder.message} · ${formatDateTime(reminder.time)}`;
+    button.className = `reminder-dot${reminder.completed ? " is-completed" : ""}`;
+    button.title = `${reminder.message} · ${formatDateTime(reminder.time)}${reminder.completed ? " · completed" : ""}`;
     button.setAttribute("aria-label", `${reminder.message} at ${formatDateTime(reminder.time)}`);
     button.addEventListener("click", () => openEditor("reminder", reminder.id));
     dots.appendChild(button);
@@ -974,6 +968,7 @@ function buildEditorFields(kind, item, defaults = {}) {
       ${buildField("Title", "title", "text", item?.title || "", { required: true, full: true })}
       ${buildField("Start", "startDate", "datetime-local", toDateTimeLocalValue(startDate), { required: true })}
       ${buildField("Deadline", "deadline", "datetime-local", toDateTimeLocalValue(deadline), { required: true })}
+      ${buildCheckboxField("Completed", "completed", Boolean(item?.completed))}
       ${buildField("Event type", "eventType", "text", item?.eventType || "General", { required: true })}
       ${buildField("Address", "address", "text", item?.address === "Not set" ? "" : item?.address || "", {})}
       ${buildTextarea("Details", "details", item?.details || "", { full: true })}
@@ -1114,6 +1109,7 @@ function saveEditorItem() {
       title: String(formData.get("title") || "").trim(),
       startDate,
       deadline,
+      completed: formData.get("completed") === "on",
       eventType: String(formData.get("eventType") || "General").trim() || "General",
       eventTypeKey: normalizeTypeKey(String(formData.get("eventType") || "General")),
       address: String(formData.get("address") || "").trim() || "Not set",
@@ -1441,6 +1437,7 @@ function toPlainCalendarData(data) {
       title: event.title,
       startDate: toIsoMinuteString(event.startDate),
       deadline: toIsoMinuteString(event.deadline),
+      completed: Boolean(event.completed),
       eventType: event.eventType,
       address: event.address,
       details: event.details,
@@ -1656,6 +1653,58 @@ function hashString(value) {
   }
 
   return hash;
+}
+
+function assignEventLanesByNearestDeadline(entries) {
+  const activeLanes = Array(MAX_EVENT_LANES).fill(null);
+
+  entries.forEach((entry) => {
+    for (let laneIndex = 0; laneIndex < activeLanes.length; laneIndex += 1) {
+      const activeEntry = activeLanes[laneIndex];
+      if (activeEntry && activeEntry.endIndex < entry.startIndex) {
+        activeLanes[laneIndex] = null;
+      }
+    }
+
+    const freeLane = activeLanes.findIndex((laneEntry) => laneEntry === null);
+    if (freeLane !== -1) {
+      entry.lane = freeLane;
+      activeLanes[freeLane] = entry;
+      return;
+    }
+
+    const replaceableLane = activeLanes.reduce((selectedLane, activeEntry, laneIndex) => {
+      if (!activeEntry || activeEntry.endIndex < entry.startIndex) {
+        return selectedLane;
+      }
+
+      if (selectedLane === -1) {
+        return laneIndex;
+      }
+
+      const currentSelected = activeLanes[selectedLane];
+      if (activeEntry.endIndex > currentSelected.endIndex) {
+        return laneIndex;
+      }
+
+      return selectedLane;
+    }, -1);
+
+    if (replaceableLane === -1) {
+      entry.lane = MAX_EVENT_LANES;
+      return;
+    }
+
+    const replaceableEntry = activeLanes[replaceableLane];
+    if (replaceableEntry && replaceableEntry.endIndex > entry.endIndex) {
+      replaceableEntry.lane = MAX_EVENT_LANES;
+      entry.lane = replaceableLane;
+      activeLanes[replaceableLane] = entry;
+      return;
+    }
+
+    entry.lane = MAX_EVENT_LANES;
+  });
 }
 
 function chunk(values, size) {
