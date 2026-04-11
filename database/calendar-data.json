@@ -1,15 +1,55 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-11T00:11:04.964Z",
+  "updatedAt": "2026-04-11T00:32:25.756Z",
   "events": [
     {
-      "id": "event-202604122359-1-phd-application-sec",
-      "title": "PhD Application - SEC",
-      "startDate": "2026-04-11T08:09",
-      "deadline": "2026-04-12T23:59",
-      "eventType": "General",
+      "id": "event-202604120000-3-vla-profiler",
+      "title": "Vla_profiler",
+      "startDate": "2026-04-11T08:23",
+      "deadline": "2026-04-12T00:00",
+      "eventType": "AMD",
       "address": "Not set",
       "details": "",
+      "extra": {}
+    },
+    {
+      "id": "event-202604122359-1-phd-application-sec",
+      "title": "AI TokCart",
+      "startDate": "2026-04-11T08:09",
+      "deadline": "2026-04-12T23:59",
+      "eventType": "PhD",
+      "address": "Not set",
+      "details": "",
+      "extra": {}
+    },
+    {
+      "id": "event-202604122359-2-find-object-models-for-s",
+      "title": "Find object models for simulation",
+      "startDate": "2026-04-11T08:20",
+      "deadline": "2026-04-12T23:59",
+      "eventType": "CCTA",
+      "address": "Not set",
+      "details": "Button, bucket, drawer, rope, plug",
+      "extra": {}
+    },
+    {
+      "id": "event-202604141159-5-bi-weekly-sync",
+      "title": "Bi-weekly Sync",
+      "startDate": "2026-04-13T09:00",
+      "deadline": "2026-04-14T11:59",
+      "eventType": "AMD",
+      "address": "Not set",
+      "details": "",
+      "extra": {}
+    },
+    {
+      "id": "event-202604142359-4-data-collection",
+      "title": "Pipeline",
+      "startDate": "2026-04-13T09:00",
+      "deadline": "2026-04-14T23:59",
+      "eventType": "AMD",
+      "address": "Not set",
+      "details": "pick_and_place, 30fps -> collect data, train, evaluate",
       "extra": {}
     }
   ],
