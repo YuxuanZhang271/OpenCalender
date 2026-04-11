@@ -6,14 +6,8 @@ window.OPEN_CALENDAR_CONFIG = {
   menuBarHeight: 37,
   viewportWidth: 1280,
   viewportHeight: 832,
-  dataSources: {
-    calendar: "../database/calendar-data.json",
-    events: "../database/events.csv",
-    reminders: "../database/reminders.csv",
-  },
+  dataPath: "../database/calendar-data.json",
   github: {
-    owner: "YuxuanZhang271",
-    repo: "OpenCalender",
     branch: "main",
     dataPath: "database/calendar-data.json",
     commitMode: "actions",
