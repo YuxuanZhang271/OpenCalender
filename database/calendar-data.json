@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-11T09:06:45.176Z",
+  "updatedAt": "2026-04-11T09:08:31.811Z",
   "events": [
     {
       "id": "event-202604122359-1-phd-application-sec",
@@ -69,17 +69,6 @@
       "extra": {}
     },
     {
-      "id": "event-202605121800-6-isy5003-review",
-      "title": "ISY5003 Review",
-      "startDate": "2026-04-11T16:17",
-      "deadline": "2026-05-12T18:00",
-      "completed": false,
-      "eventType": "ISS",
-      "address": "Not set",
-      "details": "",
-      "extra": {}
-    },
-    {
       "id": "event-202605122200-8-isy5003-exam",
       "title": "ISY5003 Exam",
       "startDate": "2026-05-12T18:30",
@@ -87,17 +76,6 @@
       "completed": false,
       "eventType": "ISS",
       "address": "MPSH 2",
-      "details": "",
-      "extra": {}
-    },
-    {
-      "id": "event-202605131800-7-eba5004-review",
-      "title": "EBA5004 Review",
-      "startDate": "2026-04-11T16:18",
-      "deadline": "2026-05-13T18:00",
-      "completed": false,
-      "eventType": "ISS",
-      "address": "Not set",
       "details": "",
       "extra": {}
     },
