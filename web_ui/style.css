@@ -273,6 +273,18 @@ h2 {
   margin: 8px 0 0;
   color: var(--muted);
   line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.sync-card__link {
+  color: var(--accent-deep);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.sync-card__link:hover,
+.sync-card__link:focus-visible {
+  text-decoration: underline;
 }
 
 .sync-card__meta {

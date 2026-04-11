@@ -107,7 +107,6 @@ const elements = {
   addReminder: document.getElementById("add-reminder"),
   publishChanges: document.getElementById("publish-changes"),
   configureGithub: document.getElementById("configure-github"),
-  configureGithubToolbar: document.getElementById("configure-github-toolbar"),
   syncHeadline: document.getElementById("sync-headline"),
   syncBody: document.getElementById("sync-body"),
   dataSourceLabel: document.getElementById("data-source-label"),
@@ -179,7 +178,6 @@ function bindEvents() {
   elements.addReminder.addEventListener("click", () => openEditor("reminder"));
   elements.publishChanges.addEventListener("click", () => publishChanges());
   elements.configureGithub.addEventListener("click", () => openSettingsModal());
-  elements.configureGithubToolbar.addEventListener("click", () => openSettingsModal());
 
   elements.editorForm.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -796,12 +794,15 @@ function renderSyncCard() {
   );
   const modeLabel = state.githubSettings.commitMode === "contents" ? "GitHub contents API" : "GitHub Actions";
   const pendingLabel = state.dirty ? "Local draft pending" : "Working tree clean";
+  const repositoryUrl = configured
+    ? `https://github.com/${state.githubSettings.owner}/${state.githubSettings.repo}`
+    : "";
 
   elements.syncHeadline.textContent = configured
     ? `${modeLabel} is ready`
     : "Read-only mode";
-  elements.syncBody.textContent = configured
-    ? `Publish will write ${state.githubSettings.dataPath || DEFAULT_DATA_PATH} to ${state.githubSettings.owner}/${state.githubSettings.repo}@${state.githubSettings.branch}.`
+  elements.syncBody.innerHTML = configured
+    ? `OpenCalendar sync targets <a class="sync-card__link" href="${escapeHtml(repositoryUrl)}" target="_blank" rel="noreferrer">${escapeHtml(state.githubSettings.repo)}</a>.`
     : "Add your repository owner, repo, branch, and a token in GitHub settings before publishing.";
   elements.dataSourceLabel.textContent = `Source: ${state.sourceLabel}`;
   elements.pendingCount.textContent = pendingLabel;
