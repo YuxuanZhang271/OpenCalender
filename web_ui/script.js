@@ -90,6 +90,49 @@ const EVENT_TYPE_COLORS = {
   },
 };
 
+const EVENT_TYPE_FALLBACK_PALETTE = [
+  {
+    soft: "rgba(210, 117, 92, 0.18)",
+    strong: "rgba(210, 117, 92, 0.76)",
+    border: "rgba(175, 87, 64, 0.34)",
+  },
+  {
+    soft: "rgba(90, 150, 142, 0.18)",
+    strong: "rgba(90, 150, 142, 0.76)",
+    border: "rgba(62, 117, 109, 0.34)",
+  },
+  {
+    soft: "rgba(108, 132, 203, 0.18)",
+    strong: "rgba(108, 132, 203, 0.78)",
+    border: "rgba(80, 102, 171, 0.34)",
+  },
+  {
+    soft: "rgba(187, 146, 82, 0.18)",
+    strong: "rgba(187, 146, 82, 0.76)",
+    border: "rgba(147, 112, 55, 0.34)",
+  },
+  {
+    soft: "rgba(147, 113, 182, 0.18)",
+    strong: "rgba(147, 113, 182, 0.78)",
+    border: "rgba(111, 82, 145, 0.34)",
+  },
+  {
+    soft: "rgba(89, 164, 115, 0.18)",
+    strong: "rgba(89, 164, 115, 0.76)",
+    border: "rgba(61, 126, 85, 0.34)",
+  },
+  {
+    soft: "rgba(191, 122, 150, 0.18)",
+    strong: "rgba(191, 122, 150, 0.76)",
+    border: "rgba(151, 89, 116, 0.34)",
+  },
+  {
+    soft: "rgba(92, 153, 188, 0.18)",
+    strong: "rgba(92, 153, 188, 0.76)",
+    border: "rgba(64, 117, 149, 0.34)",
+  },
+];
+
 const elements = {
   appTitle: document.getElementById("app-title"),
   appSubtitle: document.getElementById("app-subtitle"),
@@ -620,7 +663,7 @@ function renderWeekRow(weekDates, monthStart, eventLayout, weekIndex) {
   segments.forEach((segment) => {
     const button = document.createElement("button");
     button.type = "button";
-    button.className = `event-span event-span--rail${segment.isEnd ? " is-deadline" : ""}${segment.showLabel ? "" : " is-quiet"}`;
+    button.className = `event-span event-span--rail${segment.showLabel ? "" : " is-quiet"}`;
     button.style.gridColumn = `${segment.startColumn} / ${segment.endColumn}`;
     button.style.gridRow = String(MAX_EVENT_LANES - segment.lane + 1);
     button.style.setProperty("--event-soft", segment.color.soft);
@@ -1355,7 +1398,22 @@ function normalizeTypeKey(value) {
 }
 
 function getEventTypeColor(typeKey) {
-  return EVENT_TYPE_COLORS[typeKey] || EVENT_TYPE_COLORS.general;
+  if (EVENT_TYPE_COLORS[typeKey]) {
+    return EVENT_TYPE_COLORS[typeKey];
+  }
+
+  const fallbackIndex = hashString(typeKey) % EVENT_TYPE_FALLBACK_PALETTE.length;
+  return EVENT_TYPE_FALLBACK_PALETTE[fallbackIndex];
+}
+
+function hashString(value) {
+  let hash = 0;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
+  }
+
+  return hash;
 }
 
 function chunk(values, size) {

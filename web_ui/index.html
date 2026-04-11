@@ -42,6 +42,27 @@
         <aside class="panel panel--summary">
           <section class="panel-section">
             <div class="panel-section__heading">
+              <p class="panel-kicker">Sync</p>
+              <h2>Repository flow</h2>
+            </div>
+            <article class="sync-card">
+              <p class="sync-card__headline" id="sync-headline">Read-only mode</p>
+              <p class="sync-card__body" id="sync-body">
+                Configure GitHub to publish JSON updates from the browser.
+              </p>
+              <div class="sync-card__meta">
+                <span id="data-source-label">Source: JSON</span>
+                <span id="pending-count">Working tree clean</span>
+              </div>
+              <div class="toolbar-actions">
+                <button type="button" class="ghost-button" id="configure-github">GitHub settings</button>
+                <button type="button" class="theme-toggle" id="publish-changes">Publish changes</button>
+              </div>
+            </article>
+          </section>
+
+          <section class="panel-section">
+            <div class="panel-section__heading">
               <p class="panel-kicker">At a glance</p>
               <h2>Overview</h2>
             </div>
@@ -73,26 +94,6 @@
             <div id="upcoming-list" class="upcoming-list"></div>
           </section>
 
-          <section class="panel-section">
-            <div class="panel-section__heading">
-              <p class="panel-kicker">Sync</p>
-              <h2>Repository flow</h2>
-            </div>
-            <article class="sync-card">
-              <p class="sync-card__headline" id="sync-headline">Read-only mode</p>
-              <p class="sync-card__body" id="sync-body">
-                Configure GitHub to publish JSON updates from the browser.
-              </p>
-              <div class="sync-card__meta">
-                <span id="data-source-label">Source: JSON</span>
-                <span id="pending-count">Working tree clean</span>
-              </div>
-              <div class="toolbar-actions">
-                <button type="button" class="ghost-button" id="configure-github">GitHub settings</button>
-                <button type="button" class="theme-toggle" id="publish-changes">Publish changes</button>
-              </div>
-            </article>
-          </section>
         </aside>
 
         <section class="panel panel--calendar">
@@ -111,7 +112,6 @@
 
           <div class="legend" aria-label="Calendar legend">
             <span><i class="legend__swatch legend__swatch--event"></i> Event progress</span>
-            <span><i class="legend__swatch legend__swatch--deadline"></i> Deadline day</span>
             <span><i class="legend__swatch legend__swatch--reminder"></i> Reminder</span>
           </div>
 

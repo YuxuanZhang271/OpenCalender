@@ -421,10 +421,6 @@ h2 {
   background: linear-gradient(90deg, rgba(45, 91, 73, 0.18), rgba(45, 91, 73, 0.7));
 }
 
-.legend__swatch--deadline {
-  background: linear-gradient(90deg, rgba(219, 108, 66, 0.24), var(--accent));
-}
-
 .legend__swatch--reminder {
   width: 10px;
   height: 10px;
@@ -573,7 +569,7 @@ h2 {
 
 .day-card__top {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-start;
   gap: 6px;
   height: auto;
@@ -590,7 +586,7 @@ h2 {
 
 .day-card__headline {
   display: inline-flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
   min-width: 0;
 }
@@ -600,6 +596,7 @@ h2 {
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
+  min-height: 1rem;
 }
 
 .reminder-dot {
@@ -643,14 +640,6 @@ h2 {
   border-radius: 999px;
   background: linear-gradient(90deg, var(--event-soft), var(--event-strong));
   border: 1px solid var(--event-border);
-}
-
-.event-span.is-deadline .event-span__fill {
-  box-shadow: inset -2px 0 0 rgba(255, 255, 255, 0.6);
-}
-
-[data-theme="dark"] .event-span.is-deadline .event-span__fill {
-  box-shadow: inset -2px 0 0 rgba(255, 255, 255, 0.28);
 }
 
 .event-span__text {
