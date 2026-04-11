@@ -1,6 +1,17 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-11T00:00:00.000Z",
-  "events": [],
+  "updatedAt": "2026-04-11T00:11:04.964Z",
+  "events": [
+    {
+      "id": "event-202604122359-1-phd-application-sec",
+      "title": "PhD Application - SEC",
+      "startDate": "2026-04-11T08:09",
+      "deadline": "2026-04-12T23:59",
+      "eventType": "General",
+      "address": "Not set",
+      "details": "",
+      "extra": {}
+    }
+  ],
   "reminders": []
 }
