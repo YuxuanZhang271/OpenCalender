@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-11T09:08:31.811Z",
+  "updatedAt": "2026-04-11T09:12:10.695Z",
   "events": [
     {
       "id": "event-202604122359-1-phd-application-sec",
@@ -71,7 +71,7 @@
     {
       "id": "event-202605122200-8-isy5003-exam",
       "title": "ISY5003 Exam",
-      "startDate": "2026-05-12T18:30",
+      "startDate": "2026-04-11T18:30",
       "deadline": "2026-05-12T22:00",
       "completed": false,
       "eventType": "ISS",
@@ -82,7 +82,7 @@
     {
       "id": "event-202605132200-9-eba5004-exam",
       "title": "EBA5004 Exam",
-      "startDate": "2026-05-13T18:30",
+      "startDate": "2026-04-11T18:30",
       "deadline": "2026-05-13T22:00",
       "completed": false,
       "eventType": "ISS",
