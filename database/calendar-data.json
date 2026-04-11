@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-11T09:12:10.695Z",
+  "updatedAt": "2026-04-11T11:43:00.002Z",
   "events": [
     {
       "id": "event-202604122359-1-phd-application-sec",
@@ -29,7 +29,7 @@
       "title": "Find object models for simulation",
       "startDate": "2026-04-11T08:20",
       "deadline": "2026-04-12T23:59",
-      "completed": false,
+      "completed": true,
       "eventType": "CCTA",
       "address": "Not set",
       "details": "Button, bucket, drawer, rope, plug",
